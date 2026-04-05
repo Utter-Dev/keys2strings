@@ -1,4 +1,4 @@
-import { NOTE_NAMES, CHORD_TYPES } from './music';
+import { NOTE_NAMES, CHORD_TYPES, noteToDisplay } from './music';
 import { state, setMode, setChordRoot, setChordType, clearSelection, toggleSound, toggleShowAllOctaves, subscribe } from './state';
 import { getActiveNotes, getPlayableMidis } from './helpers';
 import { playNotes, playChordStrum } from './audio';
@@ -159,17 +159,24 @@ export function createControls(container: HTMLElement) {
     // Info
     const { semitones } = getActiveNotes();
     if (semitones.size > 0) {
-      const names = [...semitones].map(s => NOTE_NAMES[s]).join(', ');
       if (state.mode === 'chord' && state.chordRoot !== null) {
         const root = NOTE_NAMES[state.chordRoot];
         const type = CHORD_TYPES[state.chordType].label;
+        const names = [...semitones].map(s => NOTE_NAMES[s]).join(', ');
         info.textContent = `${root} ${type}: ${names}`;
+      } else if (state.guitarStrings.size > 0) {
+        // Show exact notes from guitar selections
+        const notes = [...state.guitarStrings.entries()]
+          .sort(([a], [b]) => a - b)
+          .map(([, { midi }]) => noteToDisplay(midi));
+        info.textContent = `Selected: ${notes.join(', ')}`;
       } else {
+        const names = [...semitones].map(s => NOTE_NAMES[s]).join(', ');
         info.textContent = `Selected: ${names}`;
       }
     } else {
       info.textContent = state.mode === 'note'
-        ? 'Click any key or fret to highlight that note everywhere'
+        ? 'Click any key or fret to highlight that note'
         : 'Select a root note to see a chord';
     }
   }

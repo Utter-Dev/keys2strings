@@ -1,5 +1,5 @@
 import { GUITAR_TUNING, GUITAR_STRING_NAMES, FRET_COUNT, midiToNote, NOTE_NAMES } from './music';
-import { state, toggleNote, setChordRoot, setHover, subscribe } from './state';
+import { state, toggleGuitarNote, setChordRoot, setHover, subscribe } from './state';
 import { getActiveNotes, getGuitarChordVoicing } from './helpers';
 import { playNote } from './audio';
 
@@ -78,8 +78,8 @@ export function createGuitar(container: HTMLElement) {
 
       cell.addEventListener('click', () => {
         if (state.mode === 'note') {
-          toggleNote(midi);
-          if (state.soundEnabled && state.selectedMidis.has(midi)) {
+          toggleGuitarNote(s, f, midi);
+          if (state.soundEnabled && state.guitarStrings.has(s)) {
             playNote(midi);
           }
         } else {
@@ -104,15 +104,15 @@ export function createGuitar(container: HTMLElement) {
     const isChordMode = state.mode === 'chord' && state.chordRoot !== null;
     const hoverSemitone = state.hoverMidi !== null ? state.hoverMidi % 12 : null;
 
-    // In chord mode, use the voicing algorithm for guitar-specific positions
+    // In chord mode, use the standard voicing lookup
     let voicingSet: Set<string> | null = null;
     if (isChordMode) {
       const voicing = getGuitarChordVoicing();
       voicingSet = new Set(voicing.map(p => `${p.string}-${p.fret}`));
     }
 
-    // In note mode, use exact MIDIs and semitones as before
-    const { semitones, exactMidis } = getActiveNotes();
+    // In note mode, use guitar string selections
+    const { semitones } = getActiveNotes();
 
     cells.forEach((el) => {
       const midi = Number(el.dataset.midi);
@@ -125,12 +125,11 @@ export function createGuitar(container: HTMLElement) {
       let isOctave = false;
 
       if (isChordMode && voicingSet) {
-        // In chord mode: only highlight the specific voicing positions
         isExact = voicingSet.has(`${s}-${f}`);
-        isOctave = false; // no octave spreading for guitar chords
       } else {
-        // Note mode: same as before
-        isExact = exactMidis.has(midi);
+        // Note mode: check guitar string selections (exact string+fret)
+        const sel = state.guitarStrings.get(s);
+        isExact = sel !== undefined && sel.fret === f;
         isOctave = state.showAllOctaves && !isExact && semitones.has(semitone);
       }
 
