@@ -58,8 +58,11 @@ export function createPiano(container: HTMLElement) {
     keys.forEach((el, midi) => {
       const semitone = midi % 12;
       const isExact = exactMidis.has(midi);
-      const isOctave = !isExact && semitones.has(semitone);
-      const isHover = hoverSemitone !== null && semitone === hoverSemitone;
+      const isOctave = state.showAllOctaves && !isExact && semitones.has(semitone);
+      const isHoverExact = state.hoverMidi === midi;
+      const isHover = state.showAllOctaves
+        ? (hoverSemitone !== null && semitone === hoverSemitone)
+        : isHoverExact;
       const black = isBlackKey(midi);
 
       el.classList.toggle('active', isExact);

@@ -108,8 +108,10 @@ export function createGuitar(container: HTMLElement) {
       const midi = Number(el.dataset.midi);
       const semitone = midi % 12;
       const isExact = exactMidis.has(midi);
-      const isOctave = !isExact && semitones.has(semitone);
-      const isHover = hoverSemitone !== null && semitone === hoverSemitone && !isExact && !isOctave;
+      const isOctave = state.showAllOctaves && !isExact && semitones.has(semitone);
+      const isHoverExact = state.hoverMidi === midi;
+      const isHoverAll = hoverSemitone !== null && semitone === hoverSemitone;
+      const isHover = (state.showAllOctaves ? isHoverAll : isHoverExact) && !isExact && !isOctave;
       const dot = el.querySelector('.guitar-note-dot') as HTMLElement;
 
       el.classList.toggle('active', isExact);

@@ -1,5 +1,5 @@
 import { NOTE_NAMES, CHORD_TYPES } from './music';
-import { state, setMode, setChordRoot, setChordType, clearSelection, toggleSound, subscribe } from './state';
+import { state, setMode, setChordRoot, setChordType, clearSelection, toggleSound, toggleShowAllOctaves, subscribe } from './state';
 import { getActiveNotes, getPlayableMidis } from './helpers';
 import { playNotes, playChordStrum } from './audio';
 
@@ -83,6 +83,13 @@ export function createControls(container: HTMLElement) {
   const rightGroup = document.createElement('div');
   rightGroup.className = 'control-group right-controls';
 
+  // All octaves toggle
+  const octaveBtn = document.createElement('button');
+  octaveBtn.className = 'icon-btn octave-btn';
+  octaveBtn.title = 'Show same note across all octaves';
+  octaveBtn.addEventListener('click', toggleShowAllOctaves);
+  rightGroup.appendChild(octaveBtn);
+
   // Sound toggle
   const soundBtn = document.createElement('button');
   soundBtn.className = 'icon-btn sound-btn';
@@ -136,6 +143,10 @@ export function createControls(container: HTMLElement) {
       const el = btn as HTMLElement;
       el.classList.toggle('active', state.chordType === el.dataset.type);
     });
+
+    // Octave button
+    octaveBtn.textContent = state.showAllOctaves ? 'All Octaves' : 'Single Note';
+    octaveBtn.classList.toggle('active', state.showAllOctaves);
 
     // Sound button
     soundBtn.textContent = state.soundEnabled ? 'Sound ON' : 'Sound OFF';

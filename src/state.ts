@@ -18,6 +18,8 @@ export interface AppState {
   hoverSource: Source;
   // Audio
   soundEnabled: boolean;
+  // Display
+  showAllOctaves: boolean;
 }
 
 const listeners: Set<Listener> = new Set();
@@ -32,6 +34,7 @@ export const state: AppState = {
   hoverMidi: null,
   hoverSource: null,
   soundEnabled: true,
+  showAllOctaves: false,
 };
 
 export function subscribe(fn: Listener) {
@@ -98,5 +101,10 @@ export function setHover(midi: number | null, source: Source) {
 
 export function toggleSound() {
   state.soundEnabled = !state.soundEnabled;
+  emit();
+}
+
+export function toggleShowAllOctaves() {
+  state.showAllOctaves = !state.showAllOctaves;
   emit();
 }
