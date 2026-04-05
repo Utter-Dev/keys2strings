@@ -1,4 +1,4 @@
-import { CHORD_TYPES, getChordNotes, findChordVoicing } from './music';
+import { CHORD_TYPES, getChordNotes, findChordVoicing, mapMidisToGuitar } from './music';
 import type { GuitarPosition } from './music';
 import { state } from './state';
 
@@ -36,6 +36,13 @@ export function getGuitarChordVoicing(): GuitarPosition[] {
     }
   }
   return [];
+}
+
+/** Map piano-selected MIDIs to best guitar positions (one per string) */
+export function getPianoToGuitarPositions(): Set<string> {
+  if (state.pianoMidis.size === 0) return new Set();
+  const positions = mapMidisToGuitar([...state.pianoMidis]);
+  return new Set(positions.map(p => `${p.string}-${p.fret}`));
 }
 
 export function getPlayableMidis(): number[] {

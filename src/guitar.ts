@@ -1,6 +1,6 @@
 import { GUITAR_TUNING, GUITAR_STRING_NAMES, FRET_COUNT, midiToNote, NOTE_NAMES } from './music';
 import { state, toggleGuitarNote, setChordRoot, setHover, subscribe } from './state';
-import { getActiveNotes, getGuitarChordVoicing } from './helpers';
+import { getActiveNotes, getGuitarChordVoicing, getPianoToGuitarPositions } from './helpers';
 import { playNote } from './audio';
 
 const FRET_MARKERS = [3, 5, 7, 9, 12, 15];
@@ -105,13 +105,14 @@ export function createGuitar(container: HTMLElement) {
     const hoverSemitone = state.hoverMidi !== null ? state.hoverMidi % 12 : null;
 
     // In chord mode, use the standard voicing lookup
-    let voicingSet: Set<string> | null = null;
+    let positionSet: Set<string> | null = null;
     if (isChordMode) {
       const voicing = getGuitarChordVoicing();
-      voicingSet = new Set(voicing.map(p => `${p.string}-${p.fret}`));
+      positionSet = new Set(voicing.map(p => `${p.string}-${p.fret}`));
     }
 
-    // In note mode, use guitar string selections
+    // In note mode, build a set of guitar positions from both sources
+    const pianoPositions = !isChordMode ? getPianoToGuitarPositions() : new Set<string>();
     const { semitones } = getActiveNotes();
 
     cells.forEach((el) => {
@@ -124,14 +125,14 @@ export function createGuitar(container: HTMLElement) {
       let isExact = false;
       let isOctave = false;
 
-      if (isChordMode && voicingSet) {
-        isExact = voicingSet.has(`${s}-${f}`);
+      if (isChordMode && positionSet) {
+        isExact = positionSet.has(`${s}-${f}`);
       } else {
-        // Note mode: check guitar string selections AND piano MIDI matches
+        // Note mode: guitar string selections + mapped piano positions
         const sel = state.guitarStrings.get(s);
         const isGuitarSelected = sel !== undefined && sel.fret === f;
-        const isPianoMatch = state.pianoMidis.has(midi);
-        isExact = isGuitarSelected || isPianoMatch;
+        const isPianoMapped = pianoPositions.has(`${s}-${f}`);
+        isExact = isGuitarSelected || isPianoMapped;
         isOctave = state.showAllOctaves && !isExact && semitones.has(semitone);
       }
 

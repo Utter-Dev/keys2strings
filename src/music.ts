@@ -83,6 +83,58 @@ export function isBlackKey(midi: number): boolean {
   return [1, 3, 6, 8, 10].includes(s);
 }
 
+/**
+ * Map a set of MIDIs to guitar positions: one position per note,
+ * one note per string, picking the most playable arrangement.
+ */
+export function mapMidisToGuitar(midis: number[]): GuitarPosition[] {
+  if (midis.length === 0) return [];
+  if (midis.length > 6) midis = midis.slice(0, 6); // max 6 strings
+
+  // For each MIDI, find all possible guitar positions
+  const options: GuitarPosition[][] = midis.map(m => findGuitarPositions(m));
+
+  // If any MIDI has no guitar position, skip it
+  const valid = midis
+    .map((m, i) => ({ midi: m, positions: options[i] }))
+    .filter(o => o.positions.length > 0);
+
+  if (valid.length === 0) return [];
+
+  // Find best assignment: one position per note, no two on same string, minimal fret span
+  let bestResult: GuitarPosition[] = [];
+  let bestScore = -Infinity;
+
+  function search(idx: number, chosen: GuitarPosition[], usedStrings: Set<number>) {
+    if (idx === valid.length) {
+      if (chosen.length === 0) return;
+      const frets = chosen.filter(p => p.fret > 0).map(p => p.fret);
+      const span = frets.length > 0 ? Math.max(...frets) - Math.min(...frets) : 0;
+      const score = chosen.length * 10 - span * 2 - (frets.length > 0 ? Math.min(...frets) : 0);
+      if (score > bestScore) {
+        bestScore = score;
+        bestResult = [...chosen];
+      }
+      return;
+    }
+
+    for (const pos of valid[idx].positions) {
+      if (usedStrings.has(pos.string)) continue;
+      usedStrings.add(pos.string);
+      chosen.push(pos);
+      search(idx + 1, chosen, usedStrings);
+      chosen.pop();
+      usedStrings.delete(pos.string);
+    }
+
+    // Also try skipping this note (if it can't fit)
+    search(idx + 1, chosen, usedStrings);
+  }
+
+  search(0, [], new Set());
+  return bestResult;
+}
+
 // Common chord definitions (intervals from root as semitones)
 export const CHORD_TYPES: Record<string, { label: string; intervals: number[] }> = {
   major:    { label: 'Major',     intervals: [0, 4, 7] },
