@@ -127,9 +127,11 @@ export function createGuitar(container: HTMLElement) {
       if (isChordMode && voicingSet) {
         isExact = voicingSet.has(`${s}-${f}`);
       } else {
-        // Note mode: check guitar string selections (exact string+fret)
+        // Note mode: check guitar string selections AND piano MIDI matches
         const sel = state.guitarStrings.get(s);
-        isExact = sel !== undefined && sel.fret === f;
+        const isGuitarSelected = sel !== undefined && sel.fret === f;
+        const isPianoMatch = state.pianoMidis.has(midi);
+        isExact = isGuitarSelected || isPianoMatch;
         isOctave = state.showAllOctaves && !isExact && semitones.has(semitone);
       }
 

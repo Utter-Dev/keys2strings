@@ -1,5 +1,6 @@
 import { NOTE_NAMES, CHORD_TYPES, noteToDisplay } from './music';
 import { state, setMode, setChordRoot, setChordType, clearSelection, toggleSound, toggleShowAllOctaves, subscribe } from './state';
+
 import { getActiveNotes, getPlayableMidis } from './helpers';
 import { playNotes, playChordStrum } from './audio';
 

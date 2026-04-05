@@ -1,5 +1,5 @@
 import { PIANO_START, PIANO_END, isBlackKey, midiToNote, NOTE_NAMES } from './music';
-import { state, toggleNote, setChordRoot, setHover, subscribe } from './state';
+import { state, togglePianoNote, setChordRoot, setHover, subscribe } from './state';
 import { getActiveNotes } from './helpers';
 import { playNote } from './audio';
 
@@ -32,8 +32,9 @@ export function createPiano(container: HTMLElement) {
 
     key.addEventListener('click', () => {
       if (state.mode === 'note') {
-        toggleNote(midi);
-        if (state.soundEnabled && state.selectedMidis.has(midi)) {
+        const wasSelected = state.pianoMidis.has(midi);
+        togglePianoNote(midi);
+        if (state.soundEnabled && !wasSelected) {
           playNote(midi);
         }
       } else {

@@ -5,17 +5,17 @@ export type Source = 'guitar' | 'piano' | null;
 
 export interface AppState {
   mode: Mode;
-  // Note mode: exact MIDI notes the user clicked
-  selectedMidis: Set<number>;
-  // Derived semitone classes (0-11) from selectedMidis
-  selectedSemitones: Set<number>;
-  // Guitar string selections: string index (0-5) -> { fret, midi }
-  // One note per string, like forming a chord on guitar
+  // Piano selections: exact MIDI notes clicked on piano
+  pianoMidis: Set<number>;
+  // Guitar selections: string index -> { fret, midi }
   guitarStrings: Map<number, { fret: number; midi: number }>;
+  // Derived from both sources
+  selectedMidis: Set<number>;
+  selectedSemitones: Set<number>;
   // Chord mode
-  chordRoot: number | null;    // semitone 0-11
-  chordType: string;           // key into CHORD_TYPES
-  chordRootMidi: number | null; // exact MIDI that was clicked for chord root
+  chordRoot: number | null;
+  chordType: string;
+  chordRootMidi: number | null;
   // Hover
   hoverMidi: number | null;
   hoverSource: Source;
@@ -29,9 +29,10 @@ const listeners: Set<Listener> = new Set();
 
 export const state: AppState = {
   mode: 'note',
+  pianoMidis: new Set(),
+  guitarStrings: new Map(),
   selectedMidis: new Set(),
   selectedSemitones: new Set(),
-  guitarStrings: new Map(),
   chordRoot: null,
   chordType: 'major',
   chordRootMidi: null,
@@ -50,56 +51,47 @@ export function emit() {
   listeners.forEach(fn => fn());
 }
 
-function syncFromGuitar() {
+function syncDerived() {
   state.selectedMidis.clear();
   state.selectedSemitones.clear();
+  state.pianoMidis.forEach(m => {
+    state.selectedMidis.add(m);
+    state.selectedSemitones.add(m % 12);
+  });
   state.guitarStrings.forEach(({ midi }) => {
     state.selectedMidis.add(midi);
     state.selectedSemitones.add(midi % 12);
   });
 }
 
-function syncSemitones() {
-  state.selectedSemitones.clear();
-  state.selectedMidis.forEach(m => state.selectedSemitones.add(m % 12));
-}
-
 /** Toggle a note on guitar: one note per string */
 export function toggleGuitarNote(stringIndex: number, fret: number, midi: number) {
   const existing = state.guitarStrings.get(stringIndex);
   if (existing && existing.fret === fret) {
-    // Same position: deselect this string
     state.guitarStrings.delete(stringIndex);
   } else {
-    // New position on this string (replaces any previous on same string)
     state.guitarStrings.set(stringIndex, { fret, midi });
   }
-  syncFromGuitar();
+  syncDerived();
   emit();
 }
 
 /** Toggle a note from piano */
-export function toggleNote(midi: number) {
-  const semitone = midi % 12;
-  if (state.selectedSemitones.has(semitone)) {
-    for (const m of state.selectedMidis) {
-      if (m % 12 === semitone) state.selectedMidis.delete(m);
-    }
-    // Also remove from guitar strings if any match this semitone
-    for (const [s, { midi: gMidi }] of state.guitarStrings) {
-      if (gMidi % 12 === semitone) state.guitarStrings.delete(s);
-    }
+export function togglePianoNote(midi: number) {
+  if (state.pianoMidis.has(midi)) {
+    state.pianoMidis.delete(midi);
   } else {
-    state.selectedMidis.add(midi);
+    state.pianoMidis.add(midi);
   }
-  syncSemitones();
+  syncDerived();
   emit();
 }
 
 export function clearSelection() {
+  state.pianoMidis.clear();
+  state.guitarStrings.clear();
   state.selectedMidis.clear();
   state.selectedSemitones.clear();
-  state.guitarStrings.clear();
   state.chordRoot = null;
   state.chordRootMidi = null;
   emit();
@@ -118,9 +110,10 @@ export function setChordType(type: string) {
 
 export function setMode(mode: Mode) {
   state.mode = mode;
+  state.pianoMidis.clear();
+  state.guitarStrings.clear();
   state.selectedMidis.clear();
   state.selectedSemitones.clear();
-  state.guitarStrings.clear();
   state.chordRoot = null;
   state.chordRootMidi = null;
   emit();
