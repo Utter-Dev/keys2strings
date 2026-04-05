@@ -1,6 +1,7 @@
 import { PIANO_START, PIANO_END, isBlackKey, midiToNote, NOTE_NAMES } from './music';
-import { state, toggleSemitone, setChordRoot, setHover, subscribe } from './state';
+import { state, toggleNote, setChordRoot, setHover, subscribe } from './state';
 import { getActiveNotes } from './helpers';
+import { playNote } from './audio';
 
 export function createPiano(container: HTMLElement) {
   container.innerHTML = '';
@@ -22,7 +23,6 @@ export function createPiano(container: HTMLElement) {
     key.dataset.midi = String(midi);
     key.dataset.semitone = String(note.semitone);
 
-    // Label on C keys and all black keys
     if (note.name === 'C' || black) {
       const label = document.createElement('span');
       label.className = 'piano-key-label';
@@ -32,9 +32,12 @@ export function createPiano(container: HTMLElement) {
 
     key.addEventListener('click', () => {
       if (state.mode === 'note') {
-        toggleSemitone(note.semitone);
+        toggleNote(midi);
+        if (state.soundEnabled && state.selectedMidis.has(midi)) {
+          playNote(midi);
+        }
       } else {
-        setChordRoot(note.semitone);
+        setChordRoot(note.semitone, midi);
       }
     });
 
@@ -49,20 +52,24 @@ export function createPiano(container: HTMLElement) {
   container.appendChild(wrapper);
 
   function render() {
-    const active = getActiveNotes();
+    const { semitones, exactMidis } = getActiveNotes();
     const hoverSemitone = state.hoverMidi !== null ? state.hoverMidi % 12 : null;
 
     keys.forEach((el, midi) => {
       const semitone = midi % 12;
-      const isActive = active.has(semitone);
+      const isExact = exactMidis.has(midi);
+      const isOctave = !isExact && semitones.has(semitone);
       const isHover = hoverSemitone !== null && semitone === hoverSemitone;
       const black = isBlackKey(midi);
 
-      el.classList.toggle('active', isActive);
-      el.classList.toggle('hover', isHover);
+      el.classList.toggle('active', isExact);
+      el.classList.toggle('octave', isOctave);
+      el.classList.toggle('hover', isHover && !isExact && !isOctave);
 
-      if (isActive) {
+      if (isExact) {
         el.style.background = black ? 'var(--accent-dark)' : 'var(--accent)';
+      } else if (isOctave) {
+        el.style.background = black ? 'var(--octave-dark)' : 'var(--octave)';
       } else if (isHover) {
         el.style.background = black ? 'var(--hover-dark)' : 'var(--hover)';
       } else {

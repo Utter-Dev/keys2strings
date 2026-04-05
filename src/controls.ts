@@ -1,6 +1,7 @@
 import { NOTE_NAMES, CHORD_TYPES } from './music';
-import { state, setMode, setChordRoot, setChordType, clearSelection, subscribe } from './state';
-import { getActiveNotes } from './helpers';
+import { state, setMode, setChordRoot, setChordType, clearSelection, toggleSound, subscribe } from './state';
+import { getActiveNotes, getPlayableMidis } from './helpers';
+import { playNotes, playChordStrum } from './audio';
 
 export function createControls(container: HTMLElement) {
   container.innerHTML = '';
@@ -35,7 +36,7 @@ export function createControls(container: HTMLElement) {
   modeGroup.appendChild(modeToggle);
   controls.appendChild(modeGroup);
 
-  // Chord controls (shown only in chord mode)
+  // Chord controls
   const chordGroup = document.createElement('div');
   chordGroup.className = 'control-group chord-controls';
 
@@ -51,7 +52,10 @@ export function createControls(container: HTMLElement) {
     btn.textContent = name;
     btn.className = `note-btn ${name.includes('#') ? 'sharp' : ''}`;
     btn.dataset.semitone = String(i);
-    btn.addEventListener('click', () => setChordRoot(i));
+    btn.addEventListener('click', () => {
+      // Default to octave 4 (MIDI 60 + semitone) when picking from control bar
+      setChordRoot(i, 60 + i);
+    });
     rootSelect.appendChild(btn);
   });
   chordGroup.appendChild(rootSelect);
@@ -75,12 +79,41 @@ export function createControls(container: HTMLElement) {
 
   controls.appendChild(chordGroup);
 
+  // Right-side buttons
+  const rightGroup = document.createElement('div');
+  rightGroup.className = 'control-group right-controls';
+
+  // Sound toggle
+  const soundBtn = document.createElement('button');
+  soundBtn.className = 'icon-btn sound-btn';
+  soundBtn.title = 'Toggle sound';
+  soundBtn.addEventListener('click', toggleSound);
+  rightGroup.appendChild(soundBtn);
+
+  // Play button
+  const playBtn = document.createElement('button');
+  playBtn.className = 'play-btn';
+  playBtn.textContent = 'Play';
+  playBtn.title = 'Play selected notes';
+  playBtn.addEventListener('click', () => {
+    const midis = getPlayableMidis();
+    if (midis.length === 0) return;
+    if (state.mode === 'chord') {
+      playChordStrum(midis);
+    } else {
+      playNotes(midis);
+    }
+  });
+  rightGroup.appendChild(playBtn);
+
   // Clear button
   const clearBtn = document.createElement('button');
   clearBtn.textContent = 'Clear';
   clearBtn.className = 'clear-btn';
   clearBtn.addEventListener('click', clearSelection);
-  controls.appendChild(clearBtn);
+  rightGroup.appendChild(clearBtn);
+
+  controls.appendChild(rightGroup);
 
   // Info display
   const info = document.createElement('div');
@@ -90,27 +123,32 @@ export function createControls(container: HTMLElement) {
   container.appendChild(controls);
 
   function render() {
-    // Mode toggle
     noteBtn.classList.toggle('active', state.mode === 'note');
     chordBtn.classList.toggle('active', state.mode === 'chord');
     chordGroup.style.display = state.mode === 'chord' ? '' : 'none';
 
-    // Root buttons
     rootSelect.querySelectorAll('.note-btn').forEach((btn) => {
       const el = btn as HTMLElement;
       el.classList.toggle('active', state.chordRoot === Number(el.dataset.semitone));
     });
 
-    // Type buttons
     typeSelect.querySelectorAll('.type-btn').forEach((btn) => {
       const el = btn as HTMLElement;
       el.classList.toggle('active', state.chordType === el.dataset.type);
     });
 
+    // Sound button
+    soundBtn.textContent = state.soundEnabled ? 'Sound ON' : 'Sound OFF';
+    soundBtn.classList.toggle('active', state.soundEnabled);
+
+    // Play button state
+    const midis = getPlayableMidis();
+    playBtn.disabled = midis.length === 0;
+
     // Info
-    const active = getActiveNotes();
-    if (active.size > 0) {
-      const names = [...active].map(s => NOTE_NAMES[s]).join(', ');
+    const { semitones } = getActiveNotes();
+    if (semitones.size > 0) {
+      const names = [...semitones].map(s => NOTE_NAMES[s]).join(', ');
       if (state.mode === 'chord' && state.chordRoot !== null) {
         const root = NOTE_NAMES[state.chordRoot];
         const type = CHORD_TYPES[state.chordType].label;

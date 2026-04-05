@@ -10,6 +10,9 @@
   --accent-glow: rgba(108, 92, 231, 0.3);
   --hover: #a78bfa;
   --hover-dark: #7c5cbf;
+  --octave: #2eaadc;
+  --octave-dark: #1e7fa8;
+  --octave-glow: rgba(46, 170, 220, 0.3);
   --danger: #e74c5c;
   --white-key: #f5f5f0;
   --black-key: #1a1a1e;
@@ -183,6 +186,54 @@ body {
   color: #fff;
 }
 
+.right-controls {
+  margin-left: auto;
+  gap: 8px;
+}
+
+.icon-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+
+.icon-btn.active {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.icon-btn:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.play-btn {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.play-btn:hover:not(:disabled) {
+  background: var(--hover);
+  border-color: var(--hover);
+}
+
+.play-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .clear-btn {
   background: none;
   border: 1px solid var(--border);
@@ -192,7 +243,6 @@ body {
   cursor: pointer;
   font-size: 0.85rem;
   transition: all 0.2s;
-  margin-left: auto;
 }
 
 .clear-btn:hover {
@@ -271,6 +321,8 @@ body {
 
 .piano-key.active.white { box-shadow: 0 0 16px var(--accent-glow), inset 0 0 8px var(--accent-glow); }
 .piano-key.active.black { box-shadow: 0 0 16px var(--accent-glow); }
+.piano-key.octave.white { box-shadow: 0 0 12px var(--octave-glow), inset 0 0 6px var(--octave-glow); }
+.piano-key.octave.black { box-shadow: 0 0 12px var(--octave-glow); }
 
 .piano-key-label {
   position: absolute;
@@ -285,6 +337,7 @@ body {
 .piano-key.white .piano-key-label { color: #666; }
 .piano-key.black .piano-key-label { color: #999; }
 .piano-key.active .piano-key-label { color: #fff; }
+.piano-key.octave .piano-key-label { color: #fff; }
 
 /* Guitar */
 .guitar-wrapper {
