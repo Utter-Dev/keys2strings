@@ -459,6 +459,221 @@ body {
   color: var(--text);
 }
 
+/* Composer */
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.composer-transport {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.composer-play-btn {
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 70px;
+}
+
+.composer-play-btn:hover { background: var(--hover); }
+.composer-play-btn.playing { background: var(--danger); }
+.composer-play-btn.playing:hover { background: #c0392b; }
+
+.composer-loop-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.composer-loop-btn.active {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.composer-param {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.composer-param-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+
+.composer-input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  width: 64px;
+  text-align: center;
+}
+
+.composer-input:focus { outline: 1px solid var(--accent); }
+
+.composer-select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.composer-select:focus { outline: 1px solid var(--accent); }
+
+.composer-clear-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  margin-left: auto;
+  transition: all 0.2s;
+}
+
+.composer-clear-btn:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* Brush */
+.composer-brush {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.composer-brush-preview {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-left: 8px;
+}
+
+/* Grid */
+.composer-grid-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+
+.composer-grid {
+  min-width: fit-content;
+}
+
+.composer-grid-row {
+  display: grid;
+  gap: 0;
+}
+
+.composer-measure-labels {
+  margin-bottom: 2px;
+}
+
+.composer-measure-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-align: center;
+  padding: 2px 0;
+  border-bottom: 2px solid var(--border);
+}
+
+.composer-beat-row {
+  gap: 3px;
+}
+
+.composer-cell {
+  --chord-hue: 0;
+  position: relative;
+  min-width: 64px;
+  height: 72px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.composer-cell.downbeat {
+  border-left: 3px solid var(--border);
+}
+
+.composer-cell:hover {
+  border-color: var(--accent);
+  background: var(--surface2);
+}
+
+.composer-cell.has-chord {
+  background: hsla(var(--chord-hue), 60%, 45%, 0.2);
+  border-color: hsla(var(--chord-hue), 60%, 55%, 0.5);
+}
+
+.composer-cell.current {
+  box-shadow: 0 0 12px var(--accent-glow), inset 0 0 8px var(--accent-glow);
+  border-color: var(--accent);
+}
+
+.composer-cell.current.has-chord {
+  box-shadow: 0 0 16px hsla(var(--chord-hue), 70%, 55%, 0.5);
+}
+
+.composer-beat-num {
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  opacity: 0.5;
+}
+
+.composer-cell-chord {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text);
+  min-height: 1.2em;
+}
+
+.composer-cell.has-chord .composer-cell-chord {
+  color: hsla(var(--chord-hue), 70%, 75%, 1);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .controls {

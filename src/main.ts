@@ -2,6 +2,7 @@ import './style.css';
 import { createPiano } from './piano';
 import { createGuitar } from './guitar';
 import { createControls } from './controls';
+import { createComposer } from './composer';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 
@@ -19,8 +20,13 @@ app.innerHTML = `
     <span class="section-label">Guitar</span>
     <div id="guitar-container"></div>
   </div>
+  <div class="section">
+    <span class="section-label">Composer</span>
+    <div id="composer-container"></div>
+  </div>
 `;
 
 createControls(document.getElementById('controls-container')!);
 createPiano(document.getElementById('piano-container')!);
 createGuitar(document.getElementById('guitar-container')!);
+createComposer(document.getElementById('composer-container')!);

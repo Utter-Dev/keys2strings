@@ -1,6 +1,6 @@
 let ctx: AudioContext | null = null;
 
-function getContext(): AudioContext {
+export function getContext(): AudioContext {
   if (!ctx) ctx = new AudioContext();
   if (ctx.state === 'suspended') ctx.resume();
   return ctx;
@@ -21,7 +21,6 @@ export function playNote(midi: number, duration = 0.6) {
   osc.type = 'triangle';
   osc.frequency.setValueAtTime(freq, now);
 
-  // Warm envelope
   gain.gain.setValueAtTime(0, now);
   gain.gain.linearRampToValueAtTime(0.25, now + 0.02);
   gain.gain.exponentialRampToValueAtTime(0.12, now + duration * 0.3);
@@ -42,4 +41,29 @@ export function playNotes(midis: number[], stagger = 0.08) {
 
 export function playChordStrum(midis: number[]) {
   playNotes(midis, 0.05);
+}
+
+/** Schedule a chord to play at a specific AudioContext time */
+export function scheduleChord(midis: number[], time: number, duration: number) {
+  const ac = getContext();
+  midis.forEach((midi, i) => {
+    const freq = midiToFreq(midi);
+    const t = time + i * 0.012; // slight strum
+
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, t);
+
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.18, t + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.08, t + duration * 0.4);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+
+    osc.connect(gain);
+    gain.connect(ac.destination);
+    osc.start(t);
+    osc.stop(t + duration);
+  });
 }
