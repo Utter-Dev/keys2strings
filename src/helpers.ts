@@ -1,4 +1,5 @@
-import { CHORD_TYPES, getChordNotes } from './music';
+import { CHORD_TYPES, getChordNotes, findChordVoicing } from './music';
+import type { GuitarPosition } from './music';
 import { state } from './state';
 
 export interface ActiveNotes {
@@ -13,7 +14,6 @@ export function getActiveNotes(): ActiveNotes {
       const semitones = new Set(getChordNotes(state.chordRoot, chord.intervals));
       const exactMidis = new Set<number>();
       if (state.chordRootMidi !== null) {
-        // Build exact chord MIDIs from the clicked root
         const rootMidi = state.chordRootMidi;
         chord.intervals.forEach(i => exactMidis.add(rootMidi + i));
       }
@@ -24,6 +24,18 @@ export function getActiveNotes(): ActiveNotes {
     semitones: new Set(state.selectedSemitones),
     exactMidis: new Set(state.selectedMidis),
   };
+}
+
+/** Get the guitar chord voicing positions (one per string, max 6) */
+export function getGuitarChordVoicing(): GuitarPosition[] {
+  if (state.mode === 'chord' && state.chordRoot !== null) {
+    const chord = CHORD_TYPES[state.chordType];
+    if (chord) {
+      const semitones = getChordNotes(state.chordRoot, chord.intervals);
+      return findChordVoicing(semitones, state.chordRoot);
+    }
+  }
+  return [];
 }
 
 export function getPlayableMidis(): number[] {

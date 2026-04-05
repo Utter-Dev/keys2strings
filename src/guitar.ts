@@ -1,6 +1,6 @@
 import { GUITAR_TUNING, GUITAR_STRING_NAMES, FRET_COUNT, midiToNote, NOTE_NAMES } from './music';
 import { state, toggleNote, setChordRoot, setHover, subscribe } from './state';
-import { getActiveNotes } from './helpers';
+import { getActiveNotes, getGuitarChordVoicing } from './helpers';
 import { playNote } from './audio';
 
 const FRET_MARKERS = [3, 5, 7, 9, 12, 15];
@@ -101,18 +101,42 @@ export function createGuitar(container: HTMLElement) {
   container.appendChild(wrapper);
 
   function render() {
-    const { semitones, exactMidis } = getActiveNotes();
+    const isChordMode = state.mode === 'chord' && state.chordRoot !== null;
     const hoverSemitone = state.hoverMidi !== null ? state.hoverMidi % 12 : null;
+
+    // In chord mode, use the voicing algorithm for guitar-specific positions
+    let voicingSet: Set<string> | null = null;
+    if (isChordMode) {
+      const voicing = getGuitarChordVoicing();
+      voicingSet = new Set(voicing.map(p => `${p.string}-${p.fret}`));
+    }
+
+    // In note mode, use exact MIDIs and semitones as before
+    const { semitones, exactMidis } = getActiveNotes();
 
     cells.forEach((el) => {
       const midi = Number(el.dataset.midi);
+      const s = Number(el.dataset.string);
+      const f = Number(el.dataset.fret);
       const semitone = midi % 12;
-      const isExact = exactMidis.has(midi);
-      const isOctave = state.showAllOctaves && !isExact && semitones.has(semitone);
+      const dot = el.querySelector('.guitar-note-dot') as HTMLElement;
+
+      let isExact = false;
+      let isOctave = false;
+
+      if (isChordMode && voicingSet) {
+        // In chord mode: only highlight the specific voicing positions
+        isExact = voicingSet.has(`${s}-${f}`);
+        isOctave = false; // no octave spreading for guitar chords
+      } else {
+        // Note mode: same as before
+        isExact = exactMidis.has(midi);
+        isOctave = state.showAllOctaves && !isExact && semitones.has(semitone);
+      }
+
       const isHoverExact = state.hoverMidi === midi;
       const isHoverAll = hoverSemitone !== null && semitone === hoverSemitone;
       const isHover = (state.showAllOctaves ? isHoverAll : isHoverExact) && !isExact && !isOctave;
-      const dot = el.querySelector('.guitar-note-dot') as HTMLElement;
 
       el.classList.toggle('active', isExact);
       el.classList.toggle('octave', isOctave);
