@@ -32,7 +32,7 @@ export function getGuitarChordVoicing(): GuitarPosition[] {
     const chord = CHORD_TYPES[state.chordType];
     if (chord) {
       const semitones = getChordNotes(state.chordRoot, chord.intervals);
-      return findChordVoicing(semitones, state.chordRoot);
+      return findChordVoicing(semitones, state.chordRoot, state.chordType);
     }
   }
   return [];
